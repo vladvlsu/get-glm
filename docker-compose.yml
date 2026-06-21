@@ -1,0 +1,47 @@
+services:
+  get-glm-1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: get-glm-here
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - target: 3000
+        published: 4444
+        protocol: tcp
+      - target: 9222
+        published: 9222
+    networks:
+      - glm-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          pids: 1000
+          memory: 2GB
+        reservations:
+          cpus: '0.5'
+          memory: 500M
+    logging:
+      driver: local
+      options:
+        max-size: 30M
+        max-file: 5
+        compress: 'true'
+    volumes:
+      - "${PWD}/user-data:/app/user-data:rw"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+
+networks:
+  glm-net:
+    driver: bridge
+    internal: false
+    attachable: true
+
+
