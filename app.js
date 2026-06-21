@@ -239,9 +239,11 @@ app.get('/', (req, res) => {
         </div>
 
         <div class="relative z-10 flex min-h-screen w-full items-center justify-center p-4 md:p-8">
-            <div class="w-full max-w-2xl">
+            <div class="flex flex-col items-center">
 
-                <div class="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg" style="height: min(720px, 88vh);">
+                <div id="consoleWrap" class="relative" style="width: min(42rem, 96vw); height: min(720px, 88vh);">
+
+                <div id="consoleCard" class="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg">
 
                     <div class="relative w-full shrink-0 border-b border-border" style="aspect-ratio: 16 / 10; max-height: 132px;">
                         <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"></div>
@@ -271,10 +273,10 @@ app.get('/', (req, res) => {
 
                     <div class="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/30 px-5 py-2.5">
                         <span class="inline-flex items-center gap-1 rounded-md bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-950 dark:text-green-300">
-                            <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span> online
+                            <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span> Online
                         </span>
-                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">jwt based connection</span>
-                        <span class="inline-flex items-center rounded-md bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">model: glm-5 pro</span>
+                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">Encrypted</span>
+                        <span class="inline-flex items-center rounded-md bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">Model v2.4</span>
                         <span id="streamBadge" data-state="hidden" class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                             <svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
                             Streaming
@@ -298,7 +300,16 @@ app.get('/', (req, res) => {
                     </div>
                 </div>
 
-                <p class="mt-3 text-center text-xs text-muted-foreground">Routed through encrypted relay &middot; responses stream in real time</p>
+                    <div id="resizeHandle" class="absolute bottom-0 right-0 z-20 flex h-5 w-5 touch-none select-none items-end justify-end p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground" style="cursor: nwse-resize;" aria-label="Drag to resize, double-click to reset" title="Drag to resize · double-click to reset">
+                        <svg viewBox="0 0 16 16" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                            <path d="M12.5 3.5 3.5 12.5"></path>
+                            <path d="M12.5 8 8 12.5"></path>
+                            <path d="M12.5 12.5h.01"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <p class="mt-3 max-w-2xl text-center text-xs text-muted-foreground">Routed through encrypted relay &middot; responses stream in real time &middot; drag the corner to resize</p>
             </div>
         </div>
 
@@ -350,6 +361,8 @@ app.get('/', (req, res) => {
             var dialogCancel = document.getElementById('dialogCancel');
             var dialogClose = document.getElementById('dialogClose');
             var dialogSave = document.getElementById('dialogSave');
+            var consoleWrap = document.getElementById('consoleWrap');
+            var resizeHandle = document.getElementById('resizeHandle');
 
             var SPINNER_SVG = '<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
 
@@ -375,6 +388,59 @@ app.get('/', (req, res) => {
                 dialogOverlay.setAttribute('data-state', 'hidden');
                 dialogContent.setAttribute('data-state', 'hidden');
             }
+
+            // --- Resizable console: drag the corner grip, double-click to reset ---
+            var DEFAULT_W = 672;
+            var DEFAULT_H = Math.min(720, Math.round(window.innerHeight * 0.88));
+            var MIN_W = 280;
+            var MIN_H = 360;
+            var resizing = false;
+            var startX, startY, startW, startH;
+
+            function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+            function maxW() { return Math.round(window.innerWidth * 0.96); }
+            function maxH() { return Math.round(window.innerHeight * 0.92); }
+
+            function applySize(w, h) {
+                consoleWrap.style.width = clamp(w, MIN_W, maxW()) + 'px';
+                consoleWrap.style.height = clamp(h, MIN_H, maxH()) + 'px';
+            }
+
+            // Freeze the current responsive size into explicit pixels so it becomes freely draggable
+            var initRect = consoleWrap.getBoundingClientRect();
+            applySize(initRect.width, initRect.height);
+
+            resizeHandle.addEventListener('pointerdown', function (e) {
+                resizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                var rect = consoleWrap.getBoundingClientRect();
+                startW = rect.width;
+                startH = rect.height;
+                resizeHandle.setPointerCapture(e.pointerId);
+                document.body.style.cursor = 'nwse-resize';
+                document.body.style.userSelect = 'none';
+            });
+            resizeHandle.addEventListener('pointermove', function (e) {
+                if (!resizing) return;
+                applySize(startW + (e.clientX - startX), startH + (e.clientY - startY));
+            });
+            function stopResizing(e) {
+                if (!resizing) return;
+                resizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                try { resizeHandle.releasePointerCapture(e.pointerId); } catch (err) {}
+            }
+            resizeHandle.addEventListener('pointerup', stopResizing);
+            resizeHandle.addEventListener('pointercancel', stopResizing);
+            resizeHandle.addEventListener('dblclick', function () {
+                applySize(DEFAULT_W, DEFAULT_H);
+            });
+            window.addEventListener('resize', function () {
+                var rect = consoleWrap.getBoundingClientRect();
+                applySize(rect.width, rect.height);
+            });
 
             function escapeHtml(str) {
                 var div = document.createElement('div');
