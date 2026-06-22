@@ -55,7 +55,7 @@ async function getToken() {
     return token;
 }
 
-// stream to glm
+// stream to glm api
 async function performRequest(token, userPrompt) {
     const response = await fetch("https://autoglm-api.autoglm.ai/autoclaw-proxy/proxy/autoclaw/chat/completions", {
         method: 'POST',
@@ -121,7 +121,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// run server
+// run server on 3000 port
 app.listen(3000, () => {
     console.log('running on http://127.0.0.1:3000');
     console.log('if smth failed chechout this stuff is running: --remote-debugging-port=9222');
