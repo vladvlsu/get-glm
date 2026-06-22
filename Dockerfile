@@ -5,6 +5,7 @@ ARG CNAME=glm
 ARG UID=1001
 ARG GID=1001
 
+# setting up platform for buildx
 FROM --platform=$BUILDPLATFORM node:26-bookworm-slim AS builder
 
 ARG HOME
@@ -22,6 +23,7 @@ npm ci
 npx playwright install --with-deps chromium
 EOF
 
+# setting up platform for buildx
 FROM --platform=$TARGETPLATFORM node:26-bookworm-slim AS final
 
 ARG HOME
